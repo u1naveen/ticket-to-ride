@@ -1,0 +1,152 @@
+#include <bits/stdc++.h>
+using namespace std;
+int **path;
+int **cost;
+int **hello;
+int *ans;
+//its used to print the solution
+void printPath(int a, int b,int c,int des)
+{
+    if (path[a][b] == a)
+    {
+        for(int i=0;i<c;i++)
+        {
+            for(int j=i+1;j<c;j++)
+            {
+                hello[a][des]+=cost[ans[i]][ans[j]];
+            }
+        }
+        return;
+    }
+    ans[c]=path[a][b];
+    printPath(a, path[a][b],c+1,des);
+}
+int ** shortestPath(int **dist,int n)
+{
+    for(int k=0;k<n;k++)
+    {
+        for(int i=0;i<n;i++)
+        {
+            for(int j=0;j<n;j++)
+            {
+                if(dist[i][k]!=-1 && dist[k][j]!=-1) //initial values of shortest distances
+    //are based on shortest paths considering
+    //no intermediate vertex
+                {
+
+                    if(dist[i][j]==-1 || dist[i][k]+dist[k][j]<dist[i][j]){
+                        dist[i][j]=dist[i][k]+dist[k][j];
+                        path[i][j]=path[k][j];
+                    }
+                }
+            }
+        }
+    }
+    return dist;
+}
+int solve(vector<vector<int>> roads, vector<vector<int>> tickets,int n,int m) {
+    path=new int*[n];
+    cost=new int*[n];
+    ans=new int[n];
+    hello=new int*[n];
+    //nitialize the solution matrix same as input graph matrix.
+    for(int i=0;i<n;i++)
+    {
+        path[i]=new int[n];
+        cost[i]=new int[n];
+        hello[i]=new int[n];
+        for(int j=0;j<n;j++)
+        {
+            path[i][j]=i;
+            hello[i][j]=0;
+            cost[i][j]=0;
+        }
+    }
+    int **graph=new int*[n];
+    for(int i=0;i<n;i++){
+        graph[i]=new int[n];
+        for(int j=0;j<n;j++)
+            if(i!=j)
+                graph[i][j]=-1;
+            else
+                graph[i][j]=0;
+    }
+    // If vertex k is on the shortest path from
+    // i to j, then update the value of dist[i][j]
+    for(int i=0;i<n-1;i++)
+    {
+        graph[roads[i][0]-1][roads[i][1]-1]=roads[i][2];
+        path[roads[i][0]-1][roads[i][1]-1]=roads[i][0]-1;
+        graph[roads[i][1]-1][roads[i][0]-1]=roads[i][2];
+        path[roads[i][1]-1][roads[i][0]-1]=roads[i][1]-1;
+    }
+    graph=shortestPath(graph,n);
+    for(int i=0;i<m;i++)
+    {
+        cost[tickets[i][0]-1][tickets[i][1]-1]+=tickets[i][2];
+        cost[tickets[i][1]-1][tickets[i][0]-1]+=tickets[i][2];
+    }
+    for(int i=0;i<n;i++)
+    {
+        for(int j=0;j<n;j++){
+            ans[0]=i;
+            ans[1]=j;
+            printPath(i,j,2,j);
+        }
+    }
+
+    int max=hello[0][0]-graph[0][0];
+    int diff;
+    for(int i=0;i<n;i++)
+    {
+        for(int j=0;j<n;j++)
+        {
+            diff=hello[i][j]-graph[i][j];
+            if(diff>max)
+                max=diff;
+        }
+    }
+    return max;
+}
+
+int main()
+{
+    ofstream fout(getenv("OUTPUT_PATH"));
+
+    int n;
+    cin >> n;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    vector<vector<int>> roads(n-1);
+    for (int roads_row_itr = 0; roads_row_itr < n-1; roads_row_itr++) {
+        roads[roads_row_itr].resize(3);
+
+        for (int roads_column_itr = 0; roads_column_itr < 3; roads_column_itr++) {
+            cin >> roads[roads_row_itr][roads_column_itr];
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
+    int m;
+    cin >> m;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    vector<vector<int>> tickets(m);
+    for (int tickets_row_itr = 0; tickets_row_itr < m; tickets_row_itr++) {
+        tickets[tickets_row_itr].resize(3);
+
+        for (int tickets_column_itr = 0; tickets_column_itr < 3; tickets_column_itr++) {
+            cin >> tickets[tickets_row_itr][tickets_column_itr];
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
+    int result = solve(roads, tickets,n,m);
+
+    fout << result << "\n";
+
+    fout.close();
+    return 0;
+}
